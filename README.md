@@ -27,5 +27,5 @@ python example/train_distant.py \
     --batch_size 24
 ```
 #### Acknowledgements
-Thank [OpenNRE](https://github.com/thunlp/OpenNRE) for the help of code and datasets.
+Thank [OpenNRE](https://github.com/thunlp/OpenNRE) for the help of partial codes and datasets.
 
