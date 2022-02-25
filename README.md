@@ -1,5 +1,5 @@
 # HiCLRE
-Source code and data for "HiCLRE: A Hierarchical Contrastive Learning Framework for Distantly Supervised Relation Extraction"(Dongyang Li, Taolin Zhang, Nan Hu, Chengyu Wang, Xiaofeng He)
+Source code and data for ACL2022 (findings) paper "HiCLRE: A Hierarchical Contrastive Learning Framework for Distantly Supervised Relation Extraction"(Dongyang Li, Taolin Zhang, Nan Hu, Chengyu Wang, Xiaofeng He)
 #### Reqirements
 1. python 3.7
 2. pytorch-1.8.1
