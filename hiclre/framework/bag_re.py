@@ -239,7 +239,7 @@ class BagRE(nn.Module):
                 align = (sim_cos) / (self.batch_size * self.bag_size)
                 align = align.detach().cpu().numpy().tolist()
                 align_list = align_list + align
-                uniform = (- torch.log( torch.tensor(self.batch_size * self.bag_size)) - 2 * sim_self).sum(0) / (self.batch_size * self.bag_size)
+                uniform = (-  2 * sim_self).sum(0) / (self.batch_size * self.bag_size)
                 uniform = uniform.detach().cpu().numpy().tolist()
                 uniform_list = uniform_list + uniform
                 # ----------------align and uniform------------------------
