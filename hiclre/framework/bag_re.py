@@ -82,7 +82,7 @@ class BagRE(nn.Module):
                 entpair_as_bag=True
             )
         # Model
-        self.model = nn.DataParallel(model)   # BagAttention-BERTEntityEncoder
+        self.model = nn.DataParallel(model)   
         # Criterion
         if loss_weight:
             self.criterion = nn.CrossEntropyLoss(weight=self.train_loader.dataset.weight)
@@ -124,8 +124,7 @@ class BagRE(nn.Module):
 
 
     def train_model(self, metric='auc'):
-        best_metric = 0
-        # bag_rep_memory = {}
+        best_metric = 0      
         sentence_rep_memory = {}
         entity_rep_memory = {}
         align_list = []
@@ -153,7 +152,7 @@ class BagRE(nn.Module):
                             data[i] = data[i].cuda()
                         except:
                             pass
-                label = data[0]  #torch.Size([16])
+                label = data[0]  
                 bag_name = data[1] 
                 scope = data[2]  
                 args = data[3:7] 
@@ -189,7 +188,7 @@ class BagRE(nn.Module):
                 if epoch != 0:
                     last_epoch_rep_list = []
                     for i in range(len(sentence_index_list)):
-                        # if sentence_rep_memory.has_key(sentence_index_list[i]):
+                        
                         if sentence_index_list[i] in sentence_rep_memory.keys() :
                             last_epoch_rep_list.append(sentence_rep_memory[sentence_index_list[i]])
                         else:
@@ -352,7 +351,7 @@ class BagRE(nn.Module):
                                 'score': logits[i][relid],
                                 'sentence_index': sentence_index[i]
                             })
-            result = eval_loader.dataset.eval(pred_result)  # pred_result={'entpair': ['m.024xrh', 'm.0vbk'], 'relation': '/people/deceasedperson/place_of_burial', 'score': 0.04142076}
+            result = eval_loader.dataset.eval(pred_result)  
         return result
 
     def load_state_dict(self, state_dict):
