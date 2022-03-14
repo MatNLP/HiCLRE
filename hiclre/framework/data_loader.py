@@ -40,7 +40,7 @@ class SentenceREDataset(data.Dataset):
         item = self.data[index]
         seq = list(self.tokenizer(item, **self.kwargs))
         res = [self.rel2id[item['relation']]] + seq
-        return [self.rel2id[item['relation']]] + seq  # label, seq1, seq2, ...
+        return [self.rel2id[item['relation']]] + seq  
 
 
     def collate_fn(data):
@@ -107,7 +107,7 @@ class SentenceREDataset(data.Dataset):
     
 def SentenceRELoader(path, rel2id, tokenizer, batch_size, 
         shuffle, num_workers=8, collate_fn=SentenceREDataset.collate_fn, **kwargs):
-    # SentenceRELoader(train_path, model.rel2id, model.sentence_encoder.tokenize, batch_size, True)
+    
     dataset = SentenceREDataset(path = path, rel2id = rel2id, tokenizer = tokenizer, kwargs=kwargs)
     data_loader = data.DataLoader(dataset=dataset,
             batch_size=batch_size,
@@ -273,7 +273,7 @@ class BagREDataset(data.Dataset):
         correct = 0
         total = len(self.facts) 
         entpair = {}
-        for i, item in enumerate(sorted_pred_result): #123840
+        for i, item in enumerate(sorted_pred_result): 
             # Save entpair label and result for later calculating F1
             idtf = item['entpair'][0] + '#' + item['entpair'][1]
             if idtf not in entpair:
@@ -348,13 +348,13 @@ class BagREDataset(data.Dataset):
             avai_len = max_length
         # Padding
         while len(indexed_tokens) < max_length:
-            indexed_tokens.append(0)  # 0 is id for [PAD]
+            indexed_tokens.append(0)  
         indexed_tokens = indexed_tokens[:max_length]
-        indexed_tokens = torch.tensor(indexed_tokens).long().unsqueeze(0)  # (1, L)
+        indexed_tokens = torch.tensor(indexed_tokens).long().unsqueeze(0) 
 
         # Attention mask
-        att_mask = torch.zeros(indexed_tokens.size()).long()  # (1, L)
-        att_mask[0, :avai_len] = 1  # torch.Size([1, 128])
+        att_mask = torch.zeros(indexed_tokens.size()).long()  
+        att_mask[0, :avai_len] = 1  
         return indexed_tokens, att_mask
 
     def lookup_discription_tokenAndAttMask(self, bag_name, candidate_token, candidate_attMask, entityid2tokenAttMask_dictFormat):
@@ -371,11 +371,11 @@ class BagREDataset(data.Dataset):
             head_token = candidate_token
             head_attMask = candidate_attMask
         if tail_tokenAttMask is not None:
-            # print('in tail not None')
+           
             tail_token = tail_tokenAttMask['input_ids']
             tail_attMask = tail_tokenAttMask['attention_mask']
         else:
-            # print('in tail None')
+           
             tail_token = candidate_token
             tail_attMask = candidate_attMask
         h_t = torch.tensor(head_token).unsqueeze(0)
@@ -418,9 +418,6 @@ class BagREDataset(data.Dataset):
             entityid2tokenAttMask = [line.strip() for line in reader.readlines()]
         entityid2tokenAttMask_dictFormat = {}
         for item in entityid2tokenAttMask:
-            # entity_id = item.split('\t')[0]
-            # name_list = item.split('\t')[1:]
-            # entity_dictFormat[entity_id] = name_list
             entityid2tokenAttMask_dictFormat.update(eval(item))
         return entityid2tokenAttMask_dictFormat
 
@@ -480,7 +477,7 @@ class MultiLabelSentenceREDataset(data.Dataset):
         item = self.data[index]
         seq = list(self.tokenizer(item, **self.kwargs))
         res = [self.rel2id[item['relation']]] + seq
-        return [self.rel2id[item['relation']]] + seq # label, seq1, seq2, ...
+        return [self.rel2id[item['relation']]] + seq 
     
     def collate_fn(data):
         data = list(zip(*data))
@@ -588,10 +585,9 @@ class WikiEntityOrDiscriptionDataset(data.Dataset):
         self.data_dictFormat={}
         for line in f:
             line = line.rstrip()
-            # line_listFormat=line.split('\t')
             if len(line) > 0:
                 self.data.append(line)
-                # self.data_dictFormat[line_listFormat[0]] = line_listFormat[1]
+               
         f.close()
     def __len__(self):
         return len(self.data)
