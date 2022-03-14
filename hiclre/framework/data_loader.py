@@ -164,17 +164,17 @@ class BagREDataset(data.Dataset):
                     name = (item['h']['id'], item['t']['id'])
                 else:
                     if path.__contains__('val'):
-                        fact = (item['h']['id'], item['t']['id'], item['relation'])  # ('m.0ffg54', 'm.0227y_', 'NA')
+                        fact = (item['h']['id'], item['t']['id'], item['relation']) 
                         if item['relation'] != 'NA':
-                            self.facts[fact] = 1  # {"('m.0ffg54', 'm.0227y_', '/people/person/religion')":1}
+                            self.facts[fact] = 1 
                         if entpair_as_bag:
                             name = (item['h']['id'], item['t']['id'])
                         else:
                             name = fact
                     else:
-                        fact = (item['h']['id'], item['t']['id'], item['relation'])  # ('m.0ffg54', 'm.0227y_', 'NA')
+                        fact = (item['h']['id'], item['t']['id'], item['relation'])  
                         if item['relation'] != 'NA':
-                            self.facts[fact] = 1  # {"('m.0ffg54', 'm.0227y_', '/people/person/religion')":1}
+                            self.facts[fact] = 1 
                         if entpair_as_bag:
                             name = (item['h']['id'], item['t']['id'])
                         else:
@@ -218,9 +218,9 @@ class BagREDataset(data.Dataset):
             for i in range(len(seq)):
                 seqs[i].append(seq[i])
         for i in range(len(seqs)):
-            seqs[i] = torch.cat(seqs[i], 0) # (n, L), n is the size of bag
+            seqs[i] = torch.cat(seqs[i], 
 
-        return [rel, self.bag_name[index], len(bag)] + seqs  #关系序号，('m.0ffg54', 'm.0227y_', '/people/person/religion')，包内句子数，句子tokenize后的结果
+        return [rel, self.bag_name[index], len(bag)] + seqs  
 
     def collate_fn(data):
         data = list(zip(*data))
@@ -271,7 +271,7 @@ class BagREDataset(data.Dataset):
         rec = []
         correct_sen_index = []
         correct = 0
-        total = len(self.facts) #{('m.01h_gy', 'm.043_z22', '/people/person/ethnicity'): 1, ('m.02xry', 'm.07929f', '/location/location/contains'): 1,}
+        total = len(self.facts) 
         entpair = {}
         for i, item in enumerate(sorted_pred_result): #123840
             # Save entpair label and result for later calculating F1
@@ -326,7 +326,7 @@ class BagREDataset(data.Dataset):
             if rel != 'NA':
                 max_micro_f1_each_relation[rel] = sklearn.metrics.f1_score(label_vec, pred_result_vec, labels=[self.rel2id[rel]], average='micro')
 
-        # return {'np_prec': np_prec, 'np_rec': np_rec, 'max_micro_f1': max_micro_f1, 'max_macro_f1': max_macro_f1, 'auc': auc, 'p@100': np_prec[99], 'p@200': np_prec[199], 'p@300': np_prec[299],'p@500': np_prec[499], 'p@1000': np_prec[999], 'p@2000': np_prec[1999], 'avg_p300': (np_prec[99] + np_prec[199] + np_prec[299]) / 3, 'micro_f1': micro_f1, 'macro_f1': macro_f1, 'max_micro_f1_each_relation': max_micro_f1_each_relation, 'correct_sen_index': correct_sen_index}
+        
         return {'np_prec': np_prec, 'np_rec': np_rec, 'max_micro_f1': max_micro_f1, 'max_macro_f1': max_macro_f1, 'auc': auc, 'p@100': np_prec[99], 'p@200': np_prec[199], 'p@300': np_prec[299],'p@500': np_prec[499], 'p@1000': np_prec[999], 'p@2000': np_prec[1999], 'avg_p300': (np_prec[99] + np_prec[199] + np_prec[299]) / 3, 'micro_f1': micro_f1, 'macro_f1': macro_f1, 'max_micro_f1_each_relation': max_micro_f1_each_relation}
 
     def get_keys_tool(self, dictionary, value):
@@ -338,7 +338,7 @@ class BagREDataset(data.Dataset):
             else:
                 continue
         return key
-        # return [k for k, v in dictionary.items() if v.__contains__(value)]
+       
 
     def pad_and_attMask(self, indexed_tokens, max_length):
         indexed_tokens=indexed_tokens.numpy().tolist()[0]
@@ -390,7 +390,6 @@ class BagREDataset(data.Dataset):
 
     def wiki_discription(self):
         wiki_discription_path = '/pythonCode/HiCLRE/benchmark/wikiDictionary/wikidata5m_text.txt'
-        # wiki_discription = data_load_py.WikiDataLoader(wiki_discription_path, True, num_workers=8)
         with open(wiki_discription_path) as reader:
             wiki_discription = [line.strip() for line in reader.readlines()]
         discription_dictFormat = {}
@@ -402,7 +401,7 @@ class BagREDataset(data.Dataset):
 
     def wiki_entity(self):
         wiki_entity_path = '/pythonCode/HiCLRE/benchmark/wikiDictionary/wikidata5m_entity.txt'
-        # wiki_entity = data_load_py.WikiDataLoader(wiki_entity_path, True, num_workers=8)
+        
         with open(wiki_entity_path) as reader:
             wiki_entity = [line.strip() for line in reader.readlines()]
         entity_dictFormat = {}
@@ -414,7 +413,7 @@ class BagREDataset(data.Dataset):
 
     def dictionary_entityid2tokenAttMask(self):
         dictionary_path = '/pythonCode/HiCLRE/benchmark/nyt10/nyt10_org_entity_description.txt'
-        # wiki_entity = data_load_py.WikiDataLoader(wiki_entity_path, True, num_workers=8)
+        
         with open(dictionary_path) as reader:
             entityid2tokenAttMask = [line.strip() for line in reader.readlines()]
         entityid2tokenAttMask_dictFormat = {}
@@ -433,9 +432,8 @@ def BagRELoader(path, rel2id, tokenizer, batch_size,
         collate_fn = BagREDataset.collate_fn
     else:
         collate_fn = BagREDataset.collate_bag_size_fn
-    print('===========load data begin============:', path )
+    
     dataset = BagREDataset(path, rel2id, tokenizer, entpair_as_bag=entpair_as_bag, bag_size=bag_size)
-    print('===========load data end============:', path)
     data_loader = data.DataLoader(dataset=dataset,
             batch_size=batch_size,
             shuffle=shuffle,
