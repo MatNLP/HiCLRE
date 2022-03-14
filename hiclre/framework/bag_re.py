@@ -154,15 +154,15 @@ class BagRE(nn.Module):
                         except:
                             pass
                 label = data[0]  #torch.Size([16])
-                bag_name = data[1] # 48     [['m.07c5l', 'm.040f4v0', 'NA', 'Americas', 'Oceanic'], ['m.0p0hd', 'm.0dq16', 'NA', 'State University of New York', 'Albany'],
-                scope = data[2]  # 48      [[0, 4], [4, 8], [8, 12], [12, 16], [16, 20], [20, 24], [24, 28], [28, 32], [32, 36], [36, 40], [40, 44], [44, 48], [48, 52], [52, 56]
-                args = data[3:7]   # 4   torch.Size([48, 4, 128]), torch.Size([48, 4, 128]), torch.Size([48, 4, 1]), torch.Size([48, 4, 1])
+                bag_name = data[1] 
+                scope = data[2]  
+                args = data[3:7] 
                 head_end = data[7]
                 tail_end = data[8]
                 sentence_index = data[9]
                 sentence_index_list = (torch.squeeze(sentence_index.view(self.batch_size * self.bag_size,-1))).detach().cpu().numpy()
 
-                logits, rep, rep_head, rep_tail, bag_perturb, sent_perturb, entity_perturb = self.model( head_end, tail_end, label, scope, *args, bag_size=self.bag_size)   # (B, N)  torch.Size([48, 58]),torch.Size([64])
+                logits, rep, rep_head, rep_tail, bag_perturb, sent_perturb, entity_perturb = self.model( head_end, tail_end, label, scope, *args, bag_size=self.bag_size) 
 
                 #---------------------store sentence rep to memory in sentIndex order---------------------------
                 rep_list = ((rep.view(self.batch_size * self.bag_size,-1)).detach().cpu().numpy()).tolist()
@@ -184,8 +184,8 @@ class BagRE(nn.Module):
 
                 # --------------------sentence-level ---------------------
 
-                rep = rep.view(self.batch_size * self.bag_size, -1)  #torch.Size([192, 1536])
-                sent_perturb = sent_perturb.view(self.batch_size * self.bag_size, -1)  #torch.Size([192, 1536])
+                rep = rep.view(self.batch_size * self.bag_size, -1) 
+                sent_perturb = sent_perturb.view(self.batch_size * self.bag_size, -1)  
                 if epoch != 0:
                     last_epoch_rep_list = []
                     for i in range(len(sentence_index_list)):
@@ -211,27 +211,26 @@ class BagRE(nn.Module):
 
                 #--------------------bag-level ---------------------
                 if epoch != 0:
-                    batch_size = label.size(0)  # 8
-                    query = label.unsqueeze(1)  # (B, 1)  torch.Size([8, 1])
-                    att_mat = self.fc.weight[query]  # (B, 1, H)  torch.Size([8, 1, 1536])  r
-                    # if self.use_diag:
-                    att_mat = att_mat * self.diag.unsqueeze(0)  # torch.Size([8, 1, 1536])  r*A
-                    last_epoch_rep_tensor = last_epoch_rep_tensor.view(self.batch_size, self.bag_size, -1).to('cuda')  # torch.Size([8, 4, 1536])  torch.Size([25, 4, 1536])
-                    att_score = (last_epoch_rep_tensor * att_mat).sum(-1)  # (B, bag)  torch.Size([8, 4])   x*r*A=e
-                    softmax_att_score = self.softmax(att_score)  # (B, bag)  torch.Size([8, 4])  alpha=softmax(e)
-                    last_bag_rep_3dim = (softmax_att_score.unsqueeze(-1) * last_epoch_rep_tensor)  # torch.Size([25, 4, 1536])
-                    last_bag_rep = last_bag_rep_3dim.sum(1)#这里维度不对，详见xshell
-                    last_bag_rep = self.drop(last_bag_rep)  # torch.Size([8, 1536] torch.Size([24, 1536] torch.Size([25, 1536])
-                    last_bag_logits = self.fc(last_bag_rep)  # (B, N)  torch.Size([8, 25]) 25是关系种类数  torch.Size([24, 58]
+                    batch_size = label.size(0) 
+                    query = label.unsqueeze(1) 
+                    att_mat = self.fc.weight[query]  
+                    att_mat = att_mat * self.diag.unsqueeze(0) 
+                    last_epoch_rep_tensor = last_epoch_rep_tensor.view(self.batch_size, self.bag_size, -1).to('cuda') 
+                    att_score = (last_epoch_rep_tensor * att_mat).sum(-1)  
+                    softmax_att_score = self.softmax(att_score)  
+                    last_bag_rep_3dim = (softmax_att_score.unsqueeze(-1) * last_epoch_rep_tensor) 
+                    last_bag_rep = last_bag_rep_3dim.sum(1)
+                    last_bag_rep = self.drop(last_bag_rep)  
+                    last_bag_logits = self.fc(last_bag_rep) 
 
-                    bag_simi = torch.cosine_similarity( logits, last_bag_logits )  #torch.Size([48])
+                    bag_simi = torch.cosine_similarity( logits, last_bag_logits )  
                     bag_simi = torch.unsqueeze(bag_simi, dim=1)
-                    # sim_expand = (self.max_epoch - epoch) / self.max_epoch * (torch.unsqueeze(bag_simi, dim=1))
+                   
                     bag_sim_expand = ((self.max_epoch - epoch) / self.max_epoch ) * bag_simi / torch.norm(bag_simi, 2)
                     bag_perturb = bag_perturb + bag_sim_expand
 
-                logits_after_perturb = logits + bag_perturb  # torch.Size([12, 58])+torch.Size([12, 58])
-                simcse_adv_cos = torch.cosine_similarity(logits, logits_after_perturb)  # torch.Size([48]) torch.Size([12])
+                logits_after_perturb = logits + bag_perturb  
+                simcse_adv_cos = torch.cosine_similarity(logits, logits_after_perturb)  
                 adv_sim_self = torch.cosine_similarity(logits.unsqueeze(1), logits.unsqueeze(0), dim=2)
                 loss_bag = - torch.log((torch.exp(simcse_adv_cos / self.tau)) / torch.exp(adv_sim_self / self.tau).sum(0))
 
@@ -247,12 +246,12 @@ class BagRE(nn.Module):
                 # --------------------bag-level ---------------------
 
                 # --------------------entity-level ---------------------
-                rep_entity = rep_entity.view(self.batch_size * self.bag_size, -1)  # torch.Size([192, 1536])
-                entity_perturb = entity_perturb.view(self.batch_size * self.bag_size, -1)  # torch.Size([192, 1536])
+                rep_entity = rep_entity.view(self.batch_size * self.bag_size, -1)  
+                entity_perturb = entity_perturb.view(self.batch_size * self.bag_size, -1)  
                 if epoch != 0:
                     last_epoch_rep_entity_list = []
                     for i in range(len(sentence_index_list)):
-                        # if sentence_rep_memory.has_key(sentence_index_list[i]):
+                        
                         if sentence_index_list[i] in entity_rep_memory.keys():
                             last_epoch_rep_entity_list.append(entity_rep_memory[sentence_index_list[i]])
                         else:
@@ -275,7 +274,7 @@ class BagRE(nn.Module):
 
                 total_loss = self.lambda_1 *loss_crossEnropy + self.lambda_2*mean_loss_bag + self.lambda_3*mean_loss_sentence + self.lambda_4*mean_loss_entity
 
-                score, pred = logits.max(-1) # (B)
+                score, pred = logits.max(-1) 
                 acc = float((pred == label).long().sum()) / label.size(0)
 
                 pos_total = (label != 0).long().sum()
