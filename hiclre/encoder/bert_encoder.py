@@ -5,7 +5,7 @@ from transformers import BertModel, BertTokenizer
 from .base_encoder import BaseEncoder
 import random
 from torch.nn import functional as F
-# from textda.data_expansion import *
+
 
 
 
@@ -30,13 +30,13 @@ class BERTEncoder(nn.Module):
     def forward(self, token, att_mask, pos1, pos2):
         """
         Args:
-            token: (B, L), index of tokens torch.Size([96, 128])
-            att_mask: (B, L), attention mask (1 for contents and 0 for padding)  torch.Size([96, 128])
+            token: (B, L), index of tokens 
+            att_mask: (B, L), attention mask (1 for contents and 0 for padding) 
         Return:
             (B, H), representations for sentences
         """
 
-        hidden = self.bert(input_ids=token, attention_mask=att_mask).last_hidden_state   #torch.Size([96, 128, 768])
+        hidden = self.bert(input_ids=token, attention_mask=att_mask).last_hidden_state  
         return hidden.sum(1)
 
     def tokenize(self, item):
@@ -147,10 +147,10 @@ class BERTEntityEncoder(nn.Module):
             hidden = self.bert(input_ids=token, attention_mask=att_mask).last_hidden_state
 
             # Get entity start hidden state
-            onehot_head_start = torch.zeros(hidden.size()[:2]).float().to(hidden.device)  # (B, L)   torch.Size([32, 128])
-            onehot_tail_start = torch.zeros(hidden.size()[:2]).float().to(hidden.device)  # (B, L)
-            onehot_head_end = torch.zeros(hidden.size()[:2]).float().to(hidden.device)  # (B, L)   torch.Size([32, 128])
-            onehot_tail_end = torch.zeros(hidden.size()[:2]).float().to(hidden.device)  # (B, L)
+            onehot_head_start = torch.zeros(hidden.size()[:2]).float().to(hidden.device)    
+            onehot_tail_start = torch.zeros(hidden.size()[:2]).float().to(hidden.device) 
+            onehot_head_end = torch.zeros(hidden.size()[:2]).float().to(hidden.device)   
+            onehot_tail_end = torch.zeros(hidden.size()[:2]).float().to(hidden.device) 
             onehot_head_start = onehot_head_start.scatter_(1, pos1, 1)  # torch.Size([32, 128])
             onehot_tail_start = onehot_tail_start.scatter_(1, pos2, 1)
             onehot_head_end = onehot_head_end.scatter_(1, head_end, 1)
@@ -170,7 +170,7 @@ class BERTEntityEncoder(nn.Module):
 
             # Get entity start hidden state
             onehot_head_start = torch.zeros(hidden.size()[:2]).float().to(
-                hidden.device)  # (B, L)   torch.Size([32, 128])
+                hidden.device)  
             onehot_tail_start = torch.zeros(hidden.size()[:2]).float().to(hidden.device)  
             onehot_head_end = torch.zeros(hidden.size()[:2]).float().to(hidden.device) 
             onehot_tail_end = torch.zeros(hidden.size()[:2]).float().to(hidden.device) 
@@ -189,7 +189,7 @@ class BERTEntityEncoder(nn.Module):
             tail_hidden = (tail_start_hidden + tail_end_hidden) / 2 
 
             x = torch.cat([head_hidden, tail_hidden], 1) 
-            x = self.linear(x)  # torch.Size([32, 1536])
+            x = self.linear(x)  
             return x, head_hidden, tail_hidden, head_start_hidden, tail_start_hidden
 
 
@@ -245,7 +245,7 @@ class BERTEntityEncoder(nn.Module):
             ent0 = ['[unused0]'] + ent0 + ['[unused1]'] if not rev else ['[unused2]'] + ent0 + ['[unused3]']
             ent1 = ['[unused2]'] + ent1 + ['[unused3]'] if not rev else ['[unused0]'] + ent1 + ['[unused1]']
 
-        re_tokens = ['[CLS]'] + sent0 + ent0 + sent1 + ent1 + sent2 + ['[SEP]'] #['[CLS]', 'less', 'radical', 'than', 'chase', 'and', 'more', 'firmly', 'anti', '##sl', '##aver', '##y', 'than', '[unused2]', 'bates', '[unused3]', ',',
+        re_tokens = ['[CLS]'] + sent0 + ent0 + sent1 + ent1 + sent2 + ['[SEP]']
         pos1 = 1 + len(sent0) if not rev else 1 + len(sent0 + ent0 + sent1)
         pos2 = 1 + len(sent0 + ent0 + sent1) if not rev else 1 + len(sent0)
         pos1 = min(self.max_length - 1, pos1)
@@ -271,10 +271,10 @@ class BERTEntityEncoder(nn.Module):
             while len(indexed_tokens) < self.max_length:
                 indexed_tokens.append(0)  # 0 is id for [PAD]
             indexed_tokens = indexed_tokens[:self.max_length]
-        indexed_tokens = torch.tensor(indexed_tokens).long().unsqueeze(0)  # (1, L)
+        indexed_tokens = torch.tensor(indexed_tokens).long().unsqueeze(0)  
 
         # Attention mask
-        att_mask = torch.zeros(indexed_tokens.size()).long()  # (1, L)
+        att_mask = torch.zeros(indexed_tokens.size()).long() 
         att_mask[0, :avai_len] = 1
 
         return indexed_tokens, att_mask, pos1, pos2, head_token_end, tail_token_end, sentence_index
