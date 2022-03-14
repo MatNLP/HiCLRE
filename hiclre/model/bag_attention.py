@@ -177,7 +177,7 @@ class BagAttention(BagRE):
             g_sent_tail = torch.autograd.grad(loss_crossEnropy, rep_tail, create_graph=True, allow_unused=True)  
             g_sent = torch.cat([g_sent_head[0], g_sent_tail[0]], 1)
             sentence_adv_epsilon = 2
-            sent_perturb = sentence_adv_epsilon * torch.norm(g_sent, 2) * g_sent 
+            sent_perturb = sentence_adv_epsilon / torch.norm(g_sent, 2) * g_sent 
             # ------------sentence-level perturb--------------
 
             # ------------entity-level perturb--------------
@@ -185,7 +185,7 @@ class BagAttention(BagRE):
             g_entity_tail = torch.autograd.grad(loss_crossEnropy, tail_start_hidden, create_graph=True, allow_unused=True) 
             g_entity = torch.cat([g_entity_head[0], g_entity_tail[0]], 1)
             entity_adv_epsilon = 2
-            entity_perturb = entity_adv_epsilon * torch.norm(g_entity, 2) * g_entity 
+            entity_perturb = entity_adv_epsilon / torch.norm(g_entity, 2) * g_entity 
             # ------------entity-level perturb--------------
 
         else:
