@@ -56,14 +56,14 @@ parser.add_argument('--bag_size', type=int, default=4,
 # Hyper-parameters
 parser.add_argument('--batch_size', default=4, type=int,
         help='Batch size')
-# parser.add_argument('--lr', default=2e-5, type=float,
+
 parser.add_argument('--lr', default=1e-5, type=float,
         help='Learning rate')
 parser.add_argument('--max_length', default=128, type=int,
         help='Maximum sentence length')
 parser.add_argument('--max_epoch', default=3, type=int,
         help='Max number of training epochs')
-# parser.add_argument('--tau', default=0.05, type=float,
+
 parser.add_argument('--tau', default=0.75, type=float,
         help='Tempreture of Contrastive learning InfoNCE loss')
 parser.add_argument('--train_set_size', default=None, type=int,
@@ -132,7 +132,6 @@ if args.pooler == 'entity':
 elif args.pooler == 'cls':
     sentence_encoder = hiclre.encoder.BERTEncoder(
         max_length=args.max_length, 
-        # pretrain_path=args.pretrain_path,
         pretrain_path=os.path.join(default_root_path, 'pretrain/bert-base-uncased'),
         mask_entity=args.mask_entity
     )
@@ -171,7 +170,6 @@ framework = b_re.BagRE(
 
 # Train the model
 if not args.only_test:
-    # align_list, uniform_list = framework.train_model(args.metric)
     framework.train_model(args.metric)
 
 # Test the model
