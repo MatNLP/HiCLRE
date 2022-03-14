@@ -156,14 +156,14 @@ class BERTEntityEncoder(nn.Module):
             onehot_head_end = onehot_head_end.scatter_(1, head_end, 1)
             onehot_tail_end = onehot_tail_end.scatter_(1, tail_end, 1)
 
-            head_start_hidden = (onehot_head_start.unsqueeze(2) * hidden).sum(1)  # (B, H)  [32, 128, 1]*[32, 128, 768]->[32, 128, 768]->torch.Size([32, 768])
-            tail_start_hidden = (onehot_tail_start.unsqueeze(2) * hidden).sum(1)  # (B, H)
-            head_end_hidden = (onehot_head_end.unsqueeze(2) * hidden).sum(1)  # (B, H)  [32, 128, 1]*[32, 128, 768]->[32, 128, 768]->torch.Size([32, 768])
+            head_start_hidden = (onehot_head_start.unsqueeze(2) * hidden).sum(1)   
+            tail_start_hidden = (onehot_tail_start.unsqueeze(2) * hidden).sum(1) 
+            head_end_hidden = (onehot_head_end.unsqueeze(2) * hidden).sum(1)  
             tail_end_hidden = (onehot_tail_end.unsqueeze(2) * hidden).sum(1)
             head_hidden = (head_start_hidden + head_end_hidden) / 2
             tail_hidden = (tail_start_hidden + tail_end_hidden) / 2
-            x = torch.cat([head_hidden, tail_hidden], 1)  # (B, 2H)
-            x = self.linear(x)  # torch.Size([32, 1536])加点非线性操作SIGMOD，relu,dropout
+            x = torch.cat([head_hidden, tail_hidden], 1)  
+            x = self.linear(x) 
             return x, head_hidden, tail_hidden, head_start_hidden, tail_start_hidden
         else:
             hidden = self.bert(input_ids=token, attention_mask=att_mask).last_hidden_state
@@ -171,24 +171,24 @@ class BERTEntityEncoder(nn.Module):
             # Get entity start hidden state
             onehot_head_start = torch.zeros(hidden.size()[:2]).float().to(
                 hidden.device)  # (B, L)   torch.Size([32, 128])
-            onehot_tail_start = torch.zeros(hidden.size()[:2]).float().to(hidden.device)  # (B, L)
-            onehot_head_end = torch.zeros(hidden.size()[:2]).float().to(hidden.device)  # (B, L)   torch.Size([32, 128])
-            onehot_tail_end = torch.zeros(hidden.size()[:2]).float().to(hidden.device)  # (B, L)
-            onehot_head_start = onehot_head_start.scatter_(1, pos1, 1)  # torch.Size([32, 128])
+            onehot_tail_start = torch.zeros(hidden.size()[:2]).float().to(hidden.device)  
+            onehot_head_end = torch.zeros(hidden.size()[:2]).float().to(hidden.device) 
+            onehot_tail_end = torch.zeros(hidden.size()[:2]).float().to(hidden.device) 
+            onehot_head_start = onehot_head_start.scatter_(1, pos1, 1)  
             onehot_tail_start = onehot_tail_start.scatter_(1, pos2, 1)
             onehot_head_end = onehot_head_end.scatter_(1, head_end, 1)
             onehot_tail_end = onehot_tail_end.scatter_(1, tail_end, 1)
 
             head_start_hidden = (onehot_head_start.unsqueeze(2) * hidden).sum(
-                1)  # (B, H)  [32, 128, 1]*[32, 128, 768]->[32, 128, 768]->torch.Size([32, 768])
-            tail_start_hidden = (onehot_tail_start.unsqueeze(2) * hidden).sum(1)  # (B, H)
+                1)  
+            tail_start_hidden = (onehot_tail_start.unsqueeze(2) * hidden).sum(1)  
             head_end_hidden = (onehot_head_end.unsqueeze(2) * hidden).sum(
-                1)  # (B, H)  [32, 128, 1]*[32, 128, 768]->[32, 128, 768]->torch.Size([32, 768])
+                1) 
             tail_end_hidden = (onehot_tail_end.unsqueeze(2) * hidden).sum(1)
             head_hidden = (head_start_hidden + head_end_hidden) / 2
-            tail_hidden = (tail_start_hidden + tail_end_hidden) / 2  # (B, H)
+            tail_hidden = (tail_start_hidden + tail_end_hidden) / 2 
 
-            x = torch.cat([head_hidden, tail_hidden], 1)  # (B, 2H)
+            x = torch.cat([head_hidden, tail_hidden], 1) 
             x = self.linear(x)  # torch.Size([32, 1536])
             return x, head_hidden, tail_hidden, head_start_hidden, tail_start_hidden
 
