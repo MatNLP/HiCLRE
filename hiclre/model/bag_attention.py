@@ -29,7 +29,7 @@ class BagAttention(BagRE):
             self.id2rel[id] = rel
         if use_diag:
             self.use_diag = True
-            self.diag = nn.Parameter(torch.ones(self.sentence_encoder.hidden_size))  #nn.Parameter是让hidden_size也成为一个模型的参数，方便后续更新。
+            self.diag = nn.Parameter(torch.ones(self.sentence_encoder.hidden_size)) 
         else:
             self.use_diag = False
 
@@ -56,12 +56,12 @@ class BagAttention(BagRE):
             pos1s.append(pos1)
             pos2s.append(pos2)
             masks.append(mask)
-        tokens = torch.cat(tokens, 0).unsqueeze(0) # (n, L)
+        tokens = torch.cat(tokens, 0).unsqueeze(0) 
         pos1s = torch.cat(pos1s, 0).unsqueeze(0)
         pos2s = torch.cat(pos2s, 0).unsqueeze(0)
         masks = torch.cat(masks, 0).unsqueeze(0)
-        scope = torch.tensor([[0, len(bag)]]).long() # (1, 2)
-        bag_logits = self.forward(None, scope, tokens, pos1s, pos2s, masks, train=False).squeeze(0) # (N) after softmax
+        scope = torch.tensor([[0, len(bag)]]).long() 
+        bag_logits = self.forward(None, scope, tokens, pos1s, pos2s, masks, train=False).squeeze(0) 
         score, pred = bag_logits.max(0)
         score = score.item()
         pred = pred.item()
@@ -87,10 +87,10 @@ class BagAttention(BagRE):
             the encoder can actually work out correclty.
         """
         if bag_size > 0:
-            token = token.view(-1, token.size(-1))    # torch.Size([8, 4, 128]) --> torch.Size([32, 128])
-            pos1 = pos1.view(-1, pos1.size(-1))   # torch.Size(([8, 4, 128]) -->torch.Size([32, 128])
+            token = token.view(-1, token.size(-1))    
+            pos1 = pos1.view(-1, pos1.size(-1))   
             pos2 = pos2.view(-1, pos2.size(-1))
-            head_end = head_end.view(-1, head_end.size(-1))  # torch.Size(([8, 4, 128]) -->torch.Size([32, 128])
+            head_end = head_end.view(-1, head_end.size(-1))  
             tail_end = tail_end.view(-1, tail_end.size(-1))
             if mask is not None:
                 mask = mask.view(-1, mask.size(-1))
@@ -125,21 +125,21 @@ class BagAttention(BagRE):
                 att_score = (rep * att_mat).sum(-1) # (nsum)
 
                 for i in range(len(scope)):
-                    bag_mat = rep[scope[i][0]:scope[i][1]] # (n, H)
-                    softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]]) # (n)
-                    bag_rep.append((softmax_att_score.unsqueeze(-1) * bag_mat).sum(0)) # (n, 1) * (n, H) -> (n, H) -> (H)
-                bag_rep = torch.stack(bag_rep, 0) # (B, H)
+                    bag_mat = rep[scope[i][0]:scope[i][1]]
+                    softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]]) 
+                    bag_rep.append((softmax_att_score.unsqueeze(-1) * bag_mat).sum(0)) 
+                bag_rep = torch.stack(bag_rep, 0)
             else:
-                batch_size = label.size(0)    #8
-                query = label.unsqueeze(1) # (B, 1)  torch.Size([8, 1])
-                att_mat = self.fc.weight[query] # (B, 1, H)  torch.Size([8, 1, 1536])  r
+                batch_size = label.size(0)    
+                query = label.unsqueeze(1)
+                att_mat = self.fc.weight[query]
                 if self.use_diag:
-                    att_mat = att_mat * self.diag.unsqueeze(0)   #torch.Size([8, 1, 1536])  r*A
-                rep = rep.view(batch_size, bag_size, -1)   #torch.Size([8, 4, 1536])  torch.Size([25, 4, 1536])
-                att_score = (rep * att_mat).sum(-1) # (B, bag)  torch.Size([8, 4])   x*r*A=e
-                softmax_att_score = self.softmax(att_score) # (B, bag)  torch.Size([8, 4])  alpha=softmax(e)
-                bag_rep_3dim = (softmax_att_score.unsqueeze(-1) * rep) #torch.Size([25, 4, 1536])
-                bag_rep = bag_rep_3dim.sum(1) # (B, bag, 1) * (B, bag, H) -> (B, bag, H) -> (B, H)  torch.Size([8, 1536] torch.Size([25, 1536])
+                    att_mat = att_mat * self.diag.unsqueeze(0)   
+                rep = rep.view(batch_size, bag_size, -1)   
+                att_score = (rep * att_mat).sum(-1) 
+                softmax_att_score = self.softmax(att_score) 
+                bag_rep_3dim = (softmax_att_score.unsqueeze(-1) * rep) 
+                bag_rep = bag_rep_3dim.sum(1) 
 
             #----------------add attention to every level---------------------
             entity_rep_3dim = torch.cat([rep_head, rep_tail], 1).view(batch_size, bag_size, -1)
@@ -159,9 +159,8 @@ class BagAttention(BagRE):
 
 
 
-            bag_rep = self.drop(bag_rep) #torch.Size([8, 1536] torch.Size([24, 1536] torch.Size([25, 1536])
-            bag_logits = self.fc(bag_rep) # (B, N)  torch.Size([8, 25]) 25是关系种类数  torch.Size([24, 58]
-
+            bag_rep = self.drop(bag_rep) 
+            bag_logits = self.fc(bag_rep) 
 
 
             self.criterion = nn.CrossEntropyLoss()
@@ -170,25 +169,25 @@ class BagAttention(BagRE):
             loss_crossEnropy.detach()
 
             # ------------bag-level perturb--------------
-            g = torch.autograd.grad(loss_crossEnropy, rep, create_graph=True, allow_unused=True)  # g[0].shape=torch.Size([24, 4, 1536]
+            g = torch.autograd.grad(loss_crossEnropy, rep, create_graph=True, allow_unused=True) 
             g_tensor = self.fc(g[0].sum(1))
-            bag_perturb = adv_epsilon / torch.norm(g[0], 2) * g_tensor  #torch.Size([24, 58])
+            bag_perturb = adv_epsilon / torch.norm(g[0], 2) * g_tensor  
             # ------------bag-level perturb--------------
 
             # ------------sentence-level perturb--------------
-            g_sent_head = torch.autograd.grad(loss_crossEnropy, rep_head, create_graph=True, allow_unused=True)  # torch.Size([96, 768])
-            g_sent_tail = torch.autograd.grad(loss_crossEnropy, rep_tail, create_graph=True, allow_unused=True)  # torch.Size([96, 768])
+            g_sent_head = torch.autograd.grad(loss_crossEnropy, rep_head, create_graph=True, allow_unused=True) 
+            g_sent_tail = torch.autograd.grad(loss_crossEnropy, rep_tail, create_graph=True, allow_unused=True)  
             g_sent = torch.cat([g_sent_head[0], g_sent_tail[0]], 1)
             sentence_adv_epsilon = 2
-            sent_perturb = sentence_adv_epsilon * torch.norm(g_sent, 2) * g_sent # torch.Size([96, 1536])
+            sent_perturb = sentence_adv_epsilon * torch.norm(g_sent, 2) * g_sent 
             # ------------sentence-level perturb--------------
 
             # ------------entity-level perturb--------------
-            g_entity_head = torch.autograd.grad(loss_crossEnropy, head_start_hidden, create_graph=True, allow_unused=True)  # torch.Size([96, 768])
-            g_entity_tail = torch.autograd.grad(loss_crossEnropy, tail_start_hidden, create_graph=True, allow_unused=True)  # torch.Size([96, 768])
+            g_entity_head = torch.autograd.grad(loss_crossEnropy, head_start_hidden, create_graph=True, allow_unused=True) 
+            g_entity_tail = torch.autograd.grad(loss_crossEnropy, tail_start_hidden, create_graph=True, allow_unused=True) 
             g_entity = torch.cat([g_entity_head[0], g_entity_tail[0]], 1)
             entity_adv_epsilon = 2
-            entity_perturb = entity_adv_epsilon * torch.norm(g_entity, 2) * g_entity  # torch.Size([96, 1536])
+            entity_perturb = entity_adv_epsilon * torch.norm(g_entity, 2) * g_entity 
             # ------------entity-level perturb--------------
 
         else:
@@ -211,13 +210,13 @@ class BagAttention(BagRE):
                 att_mat = self.fc.weight.transpose(0, 1)
                 if self.use_diag:
                     att_mat = att_mat * self.diag.unsqueeze(1)
-                att_score = torch.matmul(rep, att_mat) # (nsum, H) * (H, N) -> (nsum, N)
+                att_score = torch.matmul(rep, att_mat) 
                 for i in range(len(scope)):
-                    bag_mat = rep[scope[i][0]:scope[i][1]] # (n, H)
-                    softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]].transpose(0, 1)) # (N, (softmax)n) 
-                    rep_for_each_rel = torch.matmul(softmax_att_score, bag_mat) # (N, n) * (n, H) -> (N, H)
-                    logit_for_each_rel = self.softmax(self.fc(rep_for_each_rel)) # ((each rel)N, (logit)N)
-                    logit_for_each_rel = logit_for_each_rel.diag() # (N)
+                    bag_mat = rep[scope[i][0]:scope[i][1]] 
+                    softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]].transpose(0, 1)) 
+                    rep_for_each_rel = torch.matmul(softmax_att_score, bag_mat)
+                    logit_for_each_rel = self.softmax(self.fc(rep_for_each_rel)) 
+                    logit_for_each_rel = logit_for_each_rel.diag()
                     bag_logits.append(logit_for_each_rel)
                 bag_logits = torch.stack(bag_logits, 0) # after **softmax**
             else:
@@ -230,12 +229,12 @@ class BagAttention(BagRE):
                 att_mat = self.fc.weight.transpose(0, 1)
                 if self.use_diag:
                     att_mat = att_mat * self.diag.unsqueeze(1) 
-                att_score = torch.matmul(rep, att_mat) # (nsum, H) * (H, N) -> (nsum, N)
-                att_score = att_score.view(batch_size, bag_size, -1) # (B, bag, N)
-                rep = rep.view(batch_size, bag_size, -1) # (B, bag, H)
-                softmax_att_score = self.softmax(att_score.transpose(1, 2)) # (B, N, (softmax)bag)
-                rep_for_each_rel = torch.matmul(softmax_att_score, rep) # (B, N, bag) * (B, bag, H) -> (B, N, H)
-                bag_logits = self.softmax(self.fc(rep_for_each_rel)).diagonal(dim1=1, dim2=2) # (B, (each rel)N)
+                att_score = torch.matmul(rep, att_mat) 
+                att_score = att_score.view(batch_size, bag_size, -1)
+                rep = rep.view(batch_size, bag_size, -1) 
+                softmax_att_score = self.softmax(att_score.transpose(1, 2)) 
+                rep_for_each_rel = torch.matmul(softmax_att_score, rep) 
+                bag_logits = self.softmax(self.fc(rep_for_each_rel)).diagonal(dim1=1, dim2=2) 
                 bag_perturb = torch.zeros_like(bag_logits).cuda()
                 sent_perturb = torch.zeros_like(rep).cuda()
                 entity_perturb = torch.zeros_like(rep).cuda()
@@ -259,25 +258,25 @@ class BagAttention(BagRE):
                 query = query.cuda()
             for i in range(len(scope)):
                 query[scope[i][0]:scope[i][1]] = label[i]
-            att_mat = self.fc.weight[query]  # (nsum, H)
+            att_mat = self.fc.weight[query] 
             if self.use_diag:
                 att_mat = att_mat * self.diag.unsqueeze(0)
             att_score = (sentenceRep_after_add_attRep * att_mat).sum(-1)  # (nsum)
 
             for i in range(len(scope)):
-                bag_mat = sentenceRep_after_add_attRep[scope[i][0]:scope[i][1]]  # (n, H)
-                softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]])  # (n)
-                bag_rep.append((softmax_att_score.unsqueeze(-1) * bag_mat).sum(0))  # (n, 1) * (n, H) -> (n, H) -> (H)
-            bag_rep = torch.stack(bag_rep, 0)   # (B, H)
+                bag_mat = sentenceRep_after_add_attRep[scope[i][0]:scope[i][1]]  
+                softmax_att_score = self.softmax(att_score[scope[i][0]:scope[i][1]])  
+                bag_rep.append((softmax_att_score.unsqueeze(-1) * bag_mat).sum(0)) 
+            bag_rep = torch.stack(bag_rep, 0)   
         else:
-            batch_size = label.size(0)  # 8
-            query = label.unsqueeze(1)  # (B, 1)  torch.Size([8, 1])
-            att_mat = self.fc.weight[query]  # (B, 1, H)  torch.Size([8, 1, 1536])  r
+            batch_size = label.size(0) 
+            query = label.unsqueeze(1) 
+            att_mat = self.fc.weight[query] 
             if self.use_diag:
-                att_mat = att_mat * self.diag.unsqueeze(0)  # torch.Size([8, 1, 1536])  r*A
-            rep = sentenceRep_after_add_attRep.view(batch_size, bag_size, -1)  # torch.Size([8, 4, 1536])  torch.Size([25, 4, 1536])
-            att_score = (rep * att_mat).sum(-1)  # (B, bag)  torch.Size([8, 4])   x*r*A=e
-            softmax_att_score = self.softmax(att_score)  # (B, bag)  torch.Size([8, 4])  alpha=softmax(e)
-            bag_rep_3dim = (softmax_att_score.unsqueeze(-1) * rep)  # torch.Size([25, 4, 1536])
+                att_mat = att_mat * self.diag.unsqueeze(0)  
+            rep = sentenceRep_after_add_attRep.view(batch_size, bag_size, -1) 
+            att_score = (rep * att_mat).sum(-1)  
+            softmax_att_score = self.softmax(att_score)  
+            bag_rep_3dim = (softmax_att_score.unsqueeze(-1) * rep)  
 
         return bag_rep_3dim
