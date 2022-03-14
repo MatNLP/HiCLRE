@@ -107,9 +107,7 @@ class BagAttention(BagRE):
         # Attention
         if train:
             if mask is not None:
-                rep, rep_head, rep_tail, head_start_hidden, tail_start_hidden = self.sentence_encoder(head_end, tail_end, token, pos1, pos2, mask, train=train )  # (nsum, H) torch.Size([32, 1536])
-
-
+                rep, rep_head, rep_tail, head_start_hidden, tail_start_hidden = self.sentence_encoder(head_end, tail_end, token, pos1, pos2, mask, train=train ) 
             else:
                 rep, rep_head, rep_tail, head_start_hidden, tail_start_hidden = self.sentence_encoder(head_end, tail_end,token, pos1, pos2, mask, train=train)
             if bag_size == 0:
