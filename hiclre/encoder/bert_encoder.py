@@ -136,10 +136,10 @@ class BERTEntityEncoder(nn.Module):
     def forward(self, head_end, tail_end, token, att_mask, pos1, pos2, train=True):
         """
         Args:
-            token: (B, L), index of tokens  torch.Size([24*2=48, 128])
+            token: (B, L), index of tokens  
             att_mask: (B, L), attention mask (1 for contents and 0 for padding)
             pos1: (B, 1), position of the head entity starter
-            pos2: (B, 1), position of the tail entity starter   torch.Size([32, 1])
+            pos2: (B, 1), position of the tail entity starter 
         Return:
             (B, 2H), representations for sentences
         """
@@ -151,7 +151,7 @@ class BERTEntityEncoder(nn.Module):
             onehot_tail_start = torch.zeros(hidden.size()[:2]).float().to(hidden.device) 
             onehot_head_end = torch.zeros(hidden.size()[:2]).float().to(hidden.device)   
             onehot_tail_end = torch.zeros(hidden.size()[:2]).float().to(hidden.device) 
-            onehot_head_start = onehot_head_start.scatter_(1, pos1, 1)  # torch.Size([32, 128])
+            onehot_head_start = onehot_head_start.scatter_(1, pos1, 1)  
             onehot_tail_start = onehot_tail_start.scatter_(1, pos2, 1)
             onehot_head_end = onehot_head_end.scatter_(1, head_end, 1)
             onehot_tail_end = onehot_tail_end.scatter_(1, tail_end, 1)
