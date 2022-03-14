@@ -119,7 +119,6 @@ class SentenceRE(nn.Module):
 
 
                 loss = self.criterion(logits, label)
-                # print('------------loss-----------------:', loss)
                 score, pred = logits.max(-1)  # (B)
                 acc = float((pred == label).long().sum()) / label.size(0)
                 # Log
